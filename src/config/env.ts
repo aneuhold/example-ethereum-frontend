@@ -1,4 +1,4 @@
-import type { AppConfig } from '@/types';
+import type { AppConfig } from '@/types/AppConfig';
 
 /**
  * Environment variable validation and configuration

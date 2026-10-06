@@ -2,8 +2,8 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { appConfig } from '@/config/env';
-import type { EtherscanPriceResponse } from '@/types';
-import { ApiError } from '@/types';
+import type { EtherscanPriceParams, EtherscanPriceResponse } from '@/types/etherscan';
+import { ApiError } from '@/types/error';
 
 /**
  * Hook to fetch current ETH→USD price with caching and error handling.
@@ -14,7 +14,7 @@ export function usePrice(): UseQueryResult<number, ApiError> {
     queryKey: ['price', 'ETH'],
     queryFn: async ({ signal }) => {
       try {
-        const params: Record<string, string> = {
+        const params: EtherscanPriceParams = {
           chainid: '1',
           module: 'stats',
           action: 'ethprice',

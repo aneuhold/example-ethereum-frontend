@@ -2,8 +2,8 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { appConfig } from '@/config/env';
-import type { EtherscanBalanceResponse } from '@/types';
-import { ApiError } from '@/types';
+import type { EtherscanBalanceParams, EtherscanBalanceResponse } from '@/types/etherscan';
+import { ApiError } from '@/types/error';
 
 /**
  * Hook to fetch ETH balance for an address with retry logic and error handling.
@@ -20,7 +20,7 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
           throw new ApiError('Invalid Ethereum address format', 400, 'INVALID_ADDRESS');
         }
 
-        const params: Record<string, string> = {
+        const params: EtherscanBalanceParams = {
           chainid: '1',
           module: 'account',
           action: 'balance',
