@@ -15,6 +15,7 @@ export function usePrice(): UseQueryResult<number, ApiError> {
     queryFn: async ({ signal }) => {
       try {
         const params: Record<string, string> = {
+          chainid: '1',
           module: 'stats',
           action: 'ethprice',
         };

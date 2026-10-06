@@ -21,6 +21,7 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
         }
 
         const params: Record<string, string> = {
+          chainid: '1',
           module: 'account',
           action: 'balance',
           address,

@@ -6,7 +6,7 @@ import type { AppConfig } from '@/types';
 function validateEnv(): AppConfig {
   const config: AppConfig = {
     etherscanApiKey: import.meta.env.VITE_ETHERSCAN_API_KEY,
-    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.etherscan.io/api',
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.etherscan.io/v2/api',
     refreshInterval: Number(import.meta.env.VITE_REFRESH_INTERVAL) || 300_000, // 5 minutes
     retryAttempts: Number(import.meta.env.VITE_RETRY_ATTEMPTS) || 3,
     retryDelay: Number(import.meta.env.VITE_RETRY_DELAY) || 1000,
