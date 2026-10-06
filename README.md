@@ -11,10 +11,12 @@ This project provides a complete, working application that includes professional
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js ≥ 20.19.0
 - npm or yarn
 
 ### Installation
+
 ```bash
 # Install dependencies
 npm install
@@ -24,7 +26,9 @@ npm run dev
 ```
 
 ### Environment Setup (Optional)
+
 Create a `.env` file in the project root:
+
 ```env
 # Etherscan API Key (optional - get from https://etherscan.io/apis)
 VITE_ETHERSCAN_API_KEY=your_api_key_here
@@ -33,8 +37,9 @@ VITE_ETHERSCAN_API_KEY=your_api_key_here
 ## Current Architecture
 
 ### Tech Stack
+
 - **Framework**: React 19 with TypeScript
-- **Styling**: Tailwind CSS 3.x + shadcn/ui components  
+- **Styling**: Tailwind CSS 3.x + shadcn/ui components
 - **State Management**: Zustand for global state, TanStack Query for server state
 - **API Client**: Axios with retry logic and error handling
 - **Testing**: Vitest + React Testing Library
@@ -42,6 +47,7 @@ VITE_ETHERSCAN_API_KEY=your_api_key_here
 - **Code Quality**: ESLint + Prettier + Husky
 
 ### What's Already Implemented
+
 - **Clean Architecture**: Domain-driven structure with TypeScript
 - **API Integration**: ETH balance and price fetching with retry logic
 - **Professional UI**: shadcn/ui components with responsive design
@@ -51,6 +57,7 @@ VITE_ETHERSCAN_API_KEY=your_api_key_here
 - **Accessibility**: ARIA labels, semantic HTML, keyboard navigation
 
 ### Project Structure
+
 ```
 src/
 ├── components/          # Reusable UI components
@@ -58,7 +65,7 @@ src/
 │   └── ErrorBoundary.tsx
 ├── config/             # Configuration and environment
 ├── hooks/              # Custom React hooks
-├── pages/              # Page components  
+├── pages/              # Page components
 ├── test/               # Testing utilities
 ├── types/              # TypeScript type definitions
 └── lib/                # Utility functions
@@ -73,13 +80,14 @@ npm run test
 # Run tests with UI
 npm run test:ui
 
-# Run tests with coverage  
+# Run tests with coverage
 npm run test:coverage
 ```
 
 ## Development
 
 ### Available Scripts
+
 ```bash
 npm run dev          # Start development server
 npm run build        # Build for production
@@ -109,6 +117,7 @@ The base application includes:
 **See `TAKE_HOME.md` for detailed assignment instructions.**
 
 You'll choose 2-3 advanced features to implement, such as:
+
 - Dynamic address management with persistence
 - Advanced data table with pagination and sorting
 - Real-time dashboard enhancements
@@ -134,12 +143,15 @@ You'll choose 2-3 advanced features to implement, such as:
 ## Configuration
 
 ### Environment Variables
+
 All configuration is centralized in `src/config/env.ts` with validation and defaults.
 
 ### TypeScript
+
 Strict configuration with path mapping (`@/*` imports) and comprehensive type checking.
 
 ### Code Quality
+
 - Pre-commit hooks automatically lint and format code
 - Comprehensive ESLint rules for React and TypeScript
 - Prettier for consistent formatting
@@ -147,6 +159,7 @@ Strict configuration with path mapping (`@/*` imports) and comprehensive type ch
 ## Troubleshooting
 
 ### Common Issues
+
 - **Node Version**: Ensure Node.js ≥ 20.19.0
 - **API Rate Limits**: Add Etherscan API key to `.env`
 - **Build Errors**: Run `npm run type-check` to identify TypeScript issues

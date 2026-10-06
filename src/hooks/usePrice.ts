@@ -25,14 +25,11 @@ export function usePrice(): UseQueryResult<number, ApiError> {
           params.apikey = appConfig.etherscanApiKey;
         }
 
-        const response = await axios.get<EtherscanPriceResponse>(
-          appConfig.apiBaseUrl,
-          {
-            params,
-            signal, // Support request cancellation
-            timeout: 10000, // 10 second timeout
-          }
-        );
+        const response = await axios.get<EtherscanPriceResponse>(appConfig.apiBaseUrl, {
+          params,
+          signal, // Support request cancellation
+          timeout: 10000, // 10 second timeout
+        });
 
         // Handle API errors
         if (response.data.status === '0') {
@@ -45,21 +42,13 @@ export function usePrice(): UseQueryResult<number, ApiError> {
 
         const ethUsd = response.data.result?.ethusd;
         if (!ethUsd) {
-          throw new ApiError(
-            'Invalid price data received from API',
-            500,
-            'INVALID_DATA'
-          );
+          throw new ApiError('Invalid price data received from API', 500, 'INVALID_DATA');
         }
 
         // Parse and validate price
         const price = new BigNumber(ethUsd).toNumber();
         if (isNaN(price) || price <= 0) {
-          throw new ApiError(
-            'Invalid price value received from API',
-            500,
-            'INVALID_PRICE'
-          );
+          throw new ApiError('Invalid price value received from API', 500, 'INVALID_PRICE');
         }
 
         return price;

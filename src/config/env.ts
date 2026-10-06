@@ -16,7 +16,7 @@ function validateEnv(): AppConfig {
   if (!config.etherscanApiKey && import.meta.env.DEV) {
     console.warn(
       '⚠️  VITE_ETHERSCAN_API_KEY not found. API requests will be rate-limited.\n' +
-      'Get a free API key at: https://etherscan.io/apis'
+        'Get a free API key at: https://etherscan.io/apis'
     );
   }
 
@@ -33,4 +33,4 @@ export const isDevelopment = import.meta.env.DEV;
 /**
  * Utility to check if we're in production mode
  */
-export const isProduction = import.meta.env.PROD; 
+export const isProduction = import.meta.env.PROD;

@@ -1,10 +1,13 @@
 # Frontend Take-Home Assignment
 
 ## Overview
+
 This project provides a production-ready foundation for monitoring Ethereum address balances. Your task is to extend this application with advanced features that demonstrate your frontend engineering skills.
 
 ## Current State
+
 The application already includes:
+
 - Professional React + TypeScript architecture
 - Real-time ETH balance and price fetching
 - Comprehensive error handling and retry logic
@@ -13,6 +16,7 @@ The application already includes:
 - Testing infrastructure and code quality tools
 
 ## Your Mission
+
 Choose **3 features** from the categories below to implement. Focus on **quality over quantity** – we want to see your best work.
 
 ---
@@ -108,6 +112,7 @@ Demonstrate testing excellence:
 ## Stretch Goals (Time Permitting)
 
 ### **G. Micro-Interactions & Polish**
+
 - Smooth animations for data updates
 - Loading skeletons during transitions
 - Hover effects and micro-feedback
@@ -115,6 +120,7 @@ Demonstrate testing excellence:
 - Keyboard shortcuts for power users
 
 ### **H. Advanced Routing**
+
 - Deep links with address filtering in URL
 - Browser back/forward support
 - Route-based state management
@@ -161,4 +167,4 @@ We'll evaluate your submission on:
 
 We look forward to reviewing your submission and discussing your implementation choices.
 
-> **Note**: The existing codebase demonstrates production-ready practices. Your additions should maintain this quality standard. 
+> **Note**: The existing codebase demonstrates production-ready practices. Your additions should maintain this quality standard.

@@ -33,14 +33,11 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
           params.apikey = appConfig.etherscanApiKey;
         }
 
-        const response = await axios.get<EtherscanBalanceResponse>(
-          appConfig.apiBaseUrl,
-          {
-            params,
-            signal, // Support request cancellation
-            timeout: 10000, // 10 second timeout
-          }
-        );
+        const response = await axios.get<EtherscanBalanceResponse>(appConfig.apiBaseUrl, {
+          params,
+          signal, // Support request cancellation
+          timeout: 10000, // 10 second timeout
+        });
 
         // Handle API errors
         if (response.data.status === '0') {
@@ -57,9 +54,7 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
           return '0.000000';
         }
 
-        return new BigNumber(weiBalance)
-          .dividedBy(new BigNumber(10).pow(18))
-          .toFixed(6);
+        return new BigNumber(weiBalance).dividedBy(new BigNumber(10).pow(18)).toFixed(6);
       } catch (error) {
         // Re-throw AbortError to handle query cancellation
         if (error instanceof Error && error.name === 'AbortError') {

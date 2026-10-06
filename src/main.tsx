@@ -23,7 +23,7 @@ const queryClient = new QueryClient({
 });
 
 // Zustand store for sanctioned addresses with better typing
-interface SanctionedState { 
+interface SanctionedState {
   addresses: string[];
   addAddress: (address: string) => void;
   removeAddress: (address: string) => void;
@@ -35,15 +35,15 @@ export const useSanctionedStore = create<SanctionedState>((set) => ({
     '0x0000000000000000000000000000000000000002',
     '0x0000000000000000000000000000000000000003',
     '0x0000000000000000000000000000000000000004',
-    '0x0000000000000000000000000000000000000005'
+    '0x0000000000000000000000000000000000000005',
   ],
-  addAddress: (address: string) => 
-    set((state) => ({ 
-      addresses: [...state.addresses, address] 
+  addAddress: (address: string) =>
+    set((state) => ({
+      addresses: [...state.addresses, address],
     })),
-  removeAddress: (address: string) => 
-    set((state) => ({ 
-      addresses: state.addresses.filter(a => a !== address) 
+  removeAddress: (address: string) =>
+    set((state) => ({
+      addresses: state.addresses.filter((a) => a !== address),
     })),
 }));
 

@@ -11,10 +11,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Skeleton = React.memo<SkeletonProps>(({ className, ...props }) => {
   return (
     <div
-      className={cn(
-        'animate-pulse rounded-md bg-muted',
-        className
-      )}
+      className={cn('animate-pulse rounded-md bg-muted', className)}
       role="status"
       aria-label="Loading content"
       {...props}
@@ -22,4 +19,4 @@ export const Skeleton = React.memo<SkeletonProps>(({ className, ...props }) => {
   );
 });
 
-Skeleton.displayName = 'Skeleton'; 
+Skeleton.displayName = 'Skeleton';
