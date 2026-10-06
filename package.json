@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -39,7 +39,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
-    "@vitest/ui": "^2.1.8",
+    "@vitest/ui": "^5.0.3",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -54,7 +54,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.3",
-    "vitest": "^2.1.9"
+    "vitest": "^5.0.3"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

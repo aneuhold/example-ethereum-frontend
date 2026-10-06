@@ -1,4 +1,4 @@
-import type { AppConfig } from '@/types';
+import type { AppConfig } from '@/types/AppConfig';
 
 /**
  * Environment variable validation and configuration
@@ -6,7 +6,7 @@ import type { AppConfig } from '@/types';
 function validateEnv(): AppConfig {
   const config: AppConfig = {
     etherscanApiKey: import.meta.env.VITE_ETHERSCAN_API_KEY,
-    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.etherscan.io/api',
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.etherscan.io/v2/api',
     refreshInterval: Number(import.meta.env.VITE_REFRESH_INTERVAL) || 300_000, // 5 minutes
     retryAttempts: Number(import.meta.env.VITE_RETRY_ATTEMPTS) || 3,
     retryDelay: Number(import.meta.env.VITE_RETRY_DELAY) || 1000,
@@ -16,7 +16,7 @@ function validateEnv(): AppConfig {
   if (!config.etherscanApiKey && import.meta.env.DEV) {
     console.warn(
       '⚠️  VITE_ETHERSCAN_API_KEY not found. API requests will be rate-limited.\n' +
-      'Get a free API key at: https://etherscan.io/apis'
+        'Get a free API key at: https://etherscan.io/apis'
     );
   }
 
@@ -33,4 +33,4 @@ export const isDevelopment = import.meta.env.DEV;
 /**
  * Utility to check if we're in production mode
  */
-export const isProduction = import.meta.env.PROD; 
+export const isProduction = import.meta.env.PROD;

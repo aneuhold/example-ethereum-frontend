@@ -17,27 +17,22 @@ const sizeMap = {
 /**
  * Accessible loading spinner component with customizable size
  */
-export const LoadingSpinner = React.memo<LoadingSpinnerProps>(({ 
-  size = 'md', 
-  className,
-  label = 'Loading...'
-}) => {
-  return (
-    <div 
-      className={cn('flex items-center justify-center', className)}
-      role="status"
-      aria-label={label}
-    >
-      <Loader2 
-        className={cn(
-          'animate-spin text-muted-foreground',
-          sizeMap[size]
-        )}
-        aria-hidden="true"
-      />
-      <span className="sr-only">{label}</span>
-    </div>
-  );
-});
+export const LoadingSpinner = React.memo<LoadingSpinnerProps>(
+  ({ size = 'md', className, label = 'Loading...' }) => {
+    return (
+      <div
+        className={cn('flex items-center justify-center', className)}
+        role="status"
+        aria-label={label}
+      >
+        <Loader2
+          className={cn('animate-spin text-muted-foreground', sizeMap[size])}
+          aria-hidden="true"
+        />
+        <span className="sr-only">{label}</span>
+      </div>
+    );
+  }
+);
 
-LoadingSpinner.displayName = 'LoadingSpinner'; 
+LoadingSpinner.displayName = 'LoadingSpinner';

@@ -2,8 +2,8 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { appConfig } from '@/config/env';
-import type { EtherscanBalanceResponse } from '@/types';
-import { ApiError } from '@/types';
+import type { EtherscanBalanceParams, EtherscanBalanceResponse } from '@/types/etherscan';
+import { ApiError } from '@/types/error';
 
 /**
  * Hook to fetch ETH balance for an address with retry logic and error handling.
@@ -20,7 +20,8 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
           throw new ApiError('Invalid Ethereum address format', 400, 'INVALID_ADDRESS');
         }
 
-        const params: Record<string, string> = {
+        const params: EtherscanBalanceParams = {
+          chainid: '1',
           module: 'account',
           action: 'balance',
           address,
@@ -32,14 +33,11 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
           params.apikey = appConfig.etherscanApiKey;
         }
 
-        const response = await axios.get<EtherscanBalanceResponse>(
-          appConfig.apiBaseUrl,
-          {
-            params,
-            signal, // Support request cancellation
-            timeout: 10000, // 10 second timeout
-          }
-        );
+        const response = await axios.get<EtherscanBalanceResponse>(appConfig.apiBaseUrl, {
+          params,
+          signal, // Support request cancellation
+          timeout: 10000, // 10 second timeout
+        });
 
         // Handle API errors
         if (response.data.status === '0') {
@@ -56,9 +54,7 @@ export function useBalance(address: string): UseQueryResult<string, ApiError> {
           return '0.000000';
         }
 
-        return new BigNumber(weiBalance)
-          .dividedBy(new BigNumber(10).pow(18))
-          .toFixed(6);
+        return new BigNumber(weiBalance).dividedBy(new BigNumber(10).pow(18)).toFixed(6);
       } catch (error) {
         // Re-throw AbortError to handle query cancellation
         if (error instanceof Error && error.name === 'AbortError') {

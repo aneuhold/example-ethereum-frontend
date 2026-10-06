@@ -2,8 +2,8 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { appConfig } from '@/config/env';
-import type { EtherscanPriceResponse } from '@/types';
-import { ApiError } from '@/types';
+import type { EtherscanPriceParams, EtherscanPriceResponse } from '@/types/etherscan';
+import { ApiError } from '@/types/error';
 
 /**
  * Hook to fetch current ETH→USD price with caching and error handling.
@@ -14,7 +14,8 @@ export function usePrice(): UseQueryResult<number, ApiError> {
     queryKey: ['price', 'ETH'],
     queryFn: async ({ signal }) => {
       try {
-        const params: Record<string, string> = {
+        const params: EtherscanPriceParams = {
+          chainid: '1',
           module: 'stats',
           action: 'ethprice',
         };
@@ -24,14 +25,11 @@ export function usePrice(): UseQueryResult<number, ApiError> {
           params.apikey = appConfig.etherscanApiKey;
         }
 
-        const response = await axios.get<EtherscanPriceResponse>(
-          appConfig.apiBaseUrl,
-          {
-            params,
-            signal, // Support request cancellation
-            timeout: 10000, // 10 second timeout
-          }
-        );
+        const response = await axios.get<EtherscanPriceResponse>(appConfig.apiBaseUrl, {
+          params,
+          signal, // Support request cancellation
+          timeout: 10000, // 10 second timeout
+        });
 
         // Handle API errors
         if (response.data.status === '0') {
@@ -44,21 +42,13 @@ export function usePrice(): UseQueryResult<number, ApiError> {
 
         const ethUsd = response.data.result?.ethusd;
         if (!ethUsd) {
-          throw new ApiError(
-            'Invalid price data received from API',
-            500,
-            'INVALID_DATA'
-          );
+          throw new ApiError('Invalid price data received from API', 500, 'INVALID_DATA');
         }
 
         // Parse and validate price
         const price = new BigNumber(ethUsd).toNumber();
         if (isNaN(price) || price <= 0) {
-          throw new ApiError(
-            'Invalid price value received from API',
-            500,
-            'INVALID_PRICE'
-          );
+          throw new ApiError('Invalid price value received from API', 500, 'INVALID_PRICE');
         }
 
         return price;
