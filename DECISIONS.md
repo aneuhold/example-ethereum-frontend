@@ -41,7 +41,7 @@
 
 ## Trade-offs Made
 
-<!-- What shortcuts did you take due to time constraints? -->
+- Didn't update eslint to the latest and make the linting more strict. It would have taken more time than could be reasonably done with the other features that needed to be built. But if this was a real project with a team, and was greenfield, that kind of standard would have paid dividends for the life of the project.
 
 ## Testing Strategy
 
