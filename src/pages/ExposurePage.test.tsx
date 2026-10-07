@@ -1,6 +1,6 @@
 import { useSanctionedStore } from '@/hooks/useSanctionedStore';
 import etherscanService from '@/services/Etherscan.service';
-import { render, screen } from '@/test/test-utils';
+import { fireEvent, render, screen } from '@/test/test-utils';
 import { ApiError } from '@/types/error';
 import { act } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,6 +10,7 @@ describe('ExposurePage', () => {
   const firstAddress = '0x0000000000000000000000000000000000000001';
   const secondAddress = '0x0000000000000000000000000000000000000002';
   const failingAddress = '0x0000000000000000000000000000000000000003';
+  const newAddress = '0x00000000219ab540356cbb839cbe05303d7705fa';
 
   /**
    * At an ETH price of 2,000, each balance is worth just over a half cent more than its displayed
@@ -27,6 +28,16 @@ describe('ExposurePage', () => {
       throw new ApiError('Network error: Service unavailable', 503, 'NETWORK_ERROR');
     });
   });
+
+  /**
+   * Waits for the address form, then types an address into it and submits it.
+   */
+  const submitAddress = async (address: string) => {
+    fireEvent.change(await screen.findByLabelText('Ethereum address'), {
+      target: { value: address },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+  };
 
   it('shows the loading state while the price is pending', () => {
     vi.spyOn(etherscanService, 'getEthPrice').mockReturnValue(new Promise(() => {}));
@@ -73,5 +84,51 @@ describe('ExposurePage', () => {
 
     act(() => useSanctionedStore.getState().removeAddress(secondAddress));
     expect(screen.queryByText(secondAddress)).not.toBeInTheDocument();
+  });
+
+  it('adds a submitted address, shows a success toast, and clears the input', async () => {
+    render(<ExposurePage />);
+
+    await submitAddress(newAddress);
+
+    expect(await screen.findByText(newAddress)).toBeInTheDocument();
+    expect(await screen.findByText('Address added')).toBeInTheDocument();
+    expect(screen.getByLabelText('Ethereum address')).toHaveValue('');
+  });
+
+  it('shows an error toast for an invalid address, adds no card, and keeps the input', async () => {
+    render(<ExposurePage />);
+
+    await submitAddress('0x123');
+
+    expect(await screen.findByText(/not a valid Ethereum address/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(2);
+    expect(screen.getByLabelText('Ethereum address')).toHaveValue('0x123');
+  });
+
+  it('shows an error toast for an address already in the list', async () => {
+    render(<ExposurePage />);
+
+    await submitAddress(firstAddress);
+
+    expect(await screen.findByText(/already in the list/)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(2);
+  });
+
+  it('removes a card and shows a toast when its remove button is clicked', async () => {
+    render(<ExposurePage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: `Remove ${secondAddress}` }));
+
+    expect(screen.queryByText(secondAddress)).not.toBeInTheDocument();
+    expect(await screen.findByText('Address removed')).toBeInTheDocument();
+  });
+
+  it('shows the empty state when no addresses are monitored', async () => {
+    useSanctionedStore.setState({ addresses: [] });
+
+    render(<ExposurePage />);
+
+    expect(await screen.findByText(/No addresses are being monitored/)).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '@/utils/tw-utils';
+import { memo } from 'react';
+import { cn } from 'cn';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
@@ -17,7 +17,7 @@ const sizeMap = {
 /**
  * Accessible loading spinner component with customizable size
  */
-export const LoadingSpinner = React.memo<LoadingSpinnerProps>(
+export const LoadingSpinner = memo<LoadingSpinnerProps>(
   ({ size = 'md', className, label = 'Loading...' }) => {
     return (
       <div

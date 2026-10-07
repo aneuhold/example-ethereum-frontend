@@ -1,5 +1,4 @@
-import React from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import {
   render,
   renderHook,
@@ -8,6 +7,7 @@ import {
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from '@/components/ui/sonner';
 
 /**
  * Create a new QueryClient for each test to avoid state leakage
@@ -29,9 +29,12 @@ const createTestQueryClient = () =>
 const createWrapper = () => {
   const queryClient = createTestQueryClient();
 
-  return ({ children }: { children: React.ReactNode }) => (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <BrowserRouter>
+        {children}
+        <Toaster />
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };

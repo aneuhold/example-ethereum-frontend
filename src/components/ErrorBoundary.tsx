@@ -3,6 +3,7 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   children: ReactNode;
@@ -90,13 +91,10 @@ export class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </div>
               )}
-              <button
-                onClick={this.handleRetry}
-                className="w-full flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <RefreshCw className="h-4 w-4" />
+              <Button onClick={this.handleRetry} className="w-full">
+                <RefreshCw />
                 Try Again
-              </button>
+              </Button>
             </CardContent>
           </Card>
         </div>

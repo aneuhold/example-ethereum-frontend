@@ -1,5 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { StrictMode } from 'react';
+import type { ErrorInfo } from 'react';
+import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -28,7 +29,7 @@ const queryClient = new QueryClient({
 });
 
 // Error handler for ErrorBoundary
-const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
+const handleError = (error: Error, errorInfo: ErrorInfo) => {
   if (isDevelopment) {
     console.error('Application Error:', error, errorInfo);
   }
@@ -36,8 +37,8 @@ const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
   // trackError(error, errorInfo);
 };
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
+createRoot(document.getElementById('root') as HTMLElement).render(
+  <StrictMode>
     <ErrorBoundary onError={handleError}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
@@ -45,5 +46,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>
-  </React.StrictMode>
+  </StrictMode>
 );

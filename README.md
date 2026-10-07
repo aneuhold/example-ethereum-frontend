@@ -39,7 +39,7 @@ VITE_ETHERSCAN_API_KEY=your_api_key_here
 ### Tech Stack
 
 - **Framework**: React 19 with TypeScript
-- **Styling**: Tailwind CSS 3.x + shadcn/ui components
+- **Styling**: Tailwind CSS 4 + shadcn/ui components, added with the shadcn CLI (`npx shadcn@latest add <component>`)
 - **State Management**: Zustand for global state, TanStack Query for server state
 - **API Client**: Axios with retry logic and error handling
 - **Testing**: Vitest + React Testing Library
@@ -68,8 +68,7 @@ src/
 ├── pages/              # Page components
 ├── services/           # API clients and other singleton services
 ├── test/               # Testing utilities
-├── types/              # TypeScript type definitions
-└── utils/              # Utility functions
+└── types/              # TypeScript type definitions
 ```
 
 ## Testing
@@ -112,6 +111,7 @@ The base application includes:
 6. **Loading States**: Loading spinners and visual feedback
 7. **Responsive Design**: Works on mobile, tablet, and desktop
 8. **Type Safety**: Full TypeScript implementation with strict types
+9. **Address Management**: Add addresses one at a time through a form and remove them from each card. The list is saved to `localStorage`, and every add and remove shows a toast.
 
 ## Your Mission
 

@@ -8,6 +8,7 @@ import type {
   EtherscanResponse,
 } from '@/types/etherscan';
 import { ApiError } from '@/types/error';
+import etherAddressService from '@/services/EtherAddress.service';
 
 /**
  * Client for the Etherscan V2 API. Every request error is thrown as an `ApiError`, except
@@ -23,8 +24,7 @@ class EtherscanService {
    * @returns Balance in ETH as a string with 6 decimals
    */
   async getBalance(address: string, signal?: AbortSignal): Promise<string> {
-    // Validate address format (basic check)
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    if (!etherAddressService.isValidAddress(address)) {
       throw new ApiError('Invalid Ethereum address format', 400, 'INVALID_ADDRESS');
     }
 

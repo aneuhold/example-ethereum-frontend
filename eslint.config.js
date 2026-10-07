@@ -27,4 +27,11 @@ export default tseslint.config([
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    // shadcn/ui components come from the CLI, and some export their variants next to the component
+    files: ['src/components/ui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ]);

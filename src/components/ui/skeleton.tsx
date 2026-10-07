@@ -1,22 +1,14 @@
-import React from 'react';
-import { cn } from '@/utils/tw-utils';
+import type { ComponentProps } from 'react';
+import { cn } from 'cn';
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string;
-}
-
-/**
- * Skeleton loading component for improved perceived performance
- */
-export const Skeleton = React.memo<SkeletonProps>(({ className, ...props }) => {
+function Skeleton({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
+      data-slot="skeleton"
       className={cn('animate-pulse rounded-md bg-muted', className)}
-      role="status"
-      aria-label="Loading content"
       {...props}
     />
   );
-});
+}
 
-Skeleton.displayName = 'Skeleton';
+export { Skeleton };

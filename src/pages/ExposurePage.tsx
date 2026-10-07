@@ -1,15 +1,27 @@
-import React from 'react';
+import type { FC } from 'react';
 import { useBalances } from '../hooks/useBalances';
 import { usePrice } from '../hooks/usePrice';
 import { useSanctionedStore } from '../hooks/useSanctionedStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { AddressForm } from '@/components/AddressForm';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import BigNumber from 'bignumber.js';
+import { CircleX, Trash } from 'lucide-react';
+import { toast } from 'sonner';
 
-const ExposurePage: React.FC = () => {
+const ExposurePage: FC = () => {
   const addresses = useSanctionedStore((s) => s.addresses);
+  const removeAddress = useSanctionedStore((s) => s.removeAddress);
   const { data: price, isPending: pricePending, error: priceError } = usePrice();
   const balances = useBalances(addresses);
 
@@ -26,6 +38,7 @@ const ExposurePage: React.FC = () => {
     return (
       <div className="p-6 max-w-md mx-auto mt-8">
         <Alert variant="destructive">
+          <CircleX />
           <AlertTitle>Error Loading Price</AlertTitle>
           <AlertDescription>Unable to fetch ETH price. Please try again later.</AlertDescription>
         </Alert>
@@ -56,7 +69,7 @@ const ExposurePage: React.FC = () => {
         {/* Total Exposure Card */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-center">Total Exposure</CardTitle>
+            <CardTitle className="text-center text-2xl font-semibold">Total Exposure</CardTitle>
             <CardDescription className="text-center">
               Aggregate USD value across all monitored addresses
             </CardDescription>
@@ -72,67 +85,85 @@ const ExposurePage: React.FC = () => {
           </CardContent>
         </Card>
 
+        <AddressForm />
+
         {/* Addresses Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {rows.map(({ address, eth, usd, isLoading, error }) => (
-            <Card key={address} className="hover:shadow-lg transition-shadow relative">
-              {/* Status indicator as a small dot in top-right corner */}
-              <div className="absolute top-3 right-3">
-                {isLoading ? (
-                  <div
-                    className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"
-                    title="Loading"
-                  />
-                ) : error ? (
-                  <div className="w-3 h-3 rounded-full bg-red-500" title="Error loading data" />
-                ) : (
-                  <div
-                    className="w-3 h-3 rounded-full bg-green-500"
-                    title="Data loaded successfully"
-                  />
-                )}
-              </div>
+        {addresses.length === 0 ? (
+          <p className="text-center text-muted-foreground">
+            No addresses are being monitored. Add one with the form above.
+          </p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {rows.map(({ address, eth, usd, isLoading, error }) => (
+              <Card key={address} className="gap-3 hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-sm font-mono font-semibold break-all leading-tight">
+                    {address}
+                  </CardTitle>
+                  <CardAction className="flex items-center gap-1">
+                    {/* Status indicator as a small dot */}
+                    {isLoading ? (
+                      <div
+                        className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"
+                        title="Loading"
+                      />
+                    ) : error ? (
+                      <div className="w-3 h-3 rounded-full bg-red-500" title="Error loading data" />
+                    ) : (
+                      <div
+                        className="w-3 h-3 rounded-full bg-green-500"
+                        title="Data loaded successfully"
+                      />
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Remove ${address}`}
+                      onClick={() => {
+                        removeAddress(address);
+                        toast.success('Address removed');
+                      }}
+                    >
+                      <Trash />
+                    </Button>
+                  </CardAction>
+                </CardHeader>
 
-              <CardHeader className="pb-3 pr-8">
-                <CardTitle className="text-sm font-mono break-all leading-tight">
-                  {address}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">ETH Balance</span>
-                    <span className="font-semibold text-right">
-                      {isLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : (
-                        <span>{eth ? `${eth.toFormat(6)} ETH` : '—'}</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">USD Value</span>
-                    <span className="font-semibold text-green-600 text-right">
-                      {isLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : (
-                        <span>{usd ? `$${usd.toFormat(2)}` : '—'}</span>
-                      )}
-                    </span>
-                  </div>
-                  {error && (
-                    <div className="mt-2">
-                      <Badge variant="destructive" className="text-xs">
-                        Failed to load
-                      </Badge>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">ETH Balance</span>
+                      <span className="text-base font-semibold text-right">
+                        {isLoading ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <span>{eth ? `${eth.toFormat(6)} ETH` : '—'}</span>
+                        )}
+                      </span>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">USD Value</span>
+                      <span className="text-base font-semibold text-green-600 text-right">
+                        {isLoading ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <span>{usd ? `$${usd.toFormat(2)}` : '—'}</span>
+                        )}
+                      </span>
+                    </div>
+                    {error && (
+                      <div className="mt-2">
+                        <Badge variant="destructive" className="text-xs">
+                          Failed to load
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
