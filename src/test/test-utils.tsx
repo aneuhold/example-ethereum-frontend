@@ -1,6 +1,11 @@
 import React from 'react';
 import type { ReactElement } from 'react';
-import { render, type RenderOptions } from '@testing-library/react';
+import {
+  render,
+  renderHook,
+  type RenderHookOptions,
+  type RenderOptions,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -18,12 +23,13 @@ const createTestQueryClient = () =>
   });
 
 /**
- * Test wrapper component that provides all necessary context providers
+ * Creates a wrapper component that provides all necessary context providers. The wrapper keeps
+ * one QueryClient across re-renders.
  */
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+const createWrapper = () => {
   const queryClient = createTestQueryClient();
 
-  return (
+  return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>{children}</BrowserRouter>
     </QueryClientProvider>
@@ -34,18 +40,16 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
  * Custom render function that includes providers
  */
 const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
-  render(ui, { wrapper: AllTheProviders, ...options });
+  render(ui, { wrapper: createWrapper(), ...options });
+
+/**
+ * Custom renderHook function that includes providers
+ */
+const customRenderHook = <Result, Props>(
+  hook: (initialProps: Props) => Result,
+  options?: Omit<RenderHookOptions<Props>, 'wrapper'>
+) => renderHook(hook, { wrapper: createWrapper(), ...options });
 
 // Re-export everything
 export * from '@testing-library/react';
-export { customRender as render };
-
-/**
- * For interaction testing, install @testing-library/user-event:
- * npm install -D @testing-library/user-event
- *
- * Then import and use like:
- * import userEvent from '@testing-library/user-event'
- * const user = userEvent.setup()
- * await user.click(button)
- */
+export { customRender as render, customRenderHook as renderHook };
