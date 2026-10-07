@@ -10,6 +10,10 @@
 - **Time spent**:
 - **Challenges faced**:
 - **Key decisions**:
+  - Upgraded to Tailwind CSS 4 and set up the shadcn CLI (`components.json`), so UI components come from the current registry instead of hand-edited v3 copies. `src/index.css` keeps the existing slate palette and system font.
+  - `EtherAddressService` owns address format validation, shared by `EtherscanService` and the store.
+  - `useSanctionedStore` owns normalization and duplicate detection, so every caller gets the same rules. `addAddress` trims and lowercases its input and throws `ValidationError` for an invalid or duplicate address; the UI shows the message as a toast. Lowercase is the canonical form, so addresses that differ only in letter case are one entry and share one balance query.
+  - The list persists to `localStorage` through zustand's `persist` middleware, so no new dependency.
 
 ### Feature 2: B. Advanced Data Table with Pagination
 
@@ -34,6 +38,24 @@
 ### Libraries/Tools Added
 
 <!-- List any new dependencies and justify them -->
+
+Added:
+
+- `sonner`: toasts. shadcn/ui deprecated its toast component in favor of Sonner.
+- `next-themes`: the shadcn/ui Sonner wrapper reads the theme from it.
+- `radix-ui`: primitives for the shadcn/ui Radix components.
+- `cn`: class merging used by CLI-generated components.
+- `@tailwindcss/vite`: Tailwind CSS 4 Vite plugin.
+
+Removed:
+
+- `clsx`, `tailwind-merge`: replaced by `cn`.
+- `postcss`, `autoprefixer`: replaced by `@tailwindcss/vite`, which handles vendor prefixing.
+
+Upgraded:
+
+- `tailwindcss` 3 to 4: current shadcn/ui components target Tailwind CSS 4.
+- `lucide-react` 0.468 to 1.52: latest version, per the shadcn/ui Tailwind CSS 4 upgrade guide.
 
 ### Performance Considerations
 
