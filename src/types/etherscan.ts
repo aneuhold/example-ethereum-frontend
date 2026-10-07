@@ -15,19 +15,21 @@ export interface EtherscanPriceParams extends EtherscanBaseParams {
   action: 'ethprice';
 }
 
+export type EtherscanParams = EtherscanBalanceParams | EtherscanPriceParams;
+
 /**
  * Etherscan response envelope. On failure (`status: '0'`), `result` holds an
  * error message string instead of the endpoint's data.
  */
-type EtherscanResponse<TResult> =
+export type EtherscanResponse<TResult> =
   | { status: '1'; message: string; result: TResult }
   | { status: '0'; message: string; result: string };
 
-export type EtherscanBalanceResponse = EtherscanResponse<string>; // Wei amount as string
+export type EtherscanBalanceResult = string; // Wei amount as string
 
-export type EtherscanPriceResponse = EtherscanResponse<{
+export interface EtherscanPriceResult {
   ethbtc: string;
   ethbtc_timestamp: string;
   ethusd: string;
   ethusd_timestamp: string;
-}>;
+}

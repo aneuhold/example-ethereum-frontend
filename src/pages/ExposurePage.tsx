@@ -1,7 +1,7 @@
 import React from 'react';
-import { useBalance } from '../hooks/useBalance';
+import { useBalances } from '../hooks/useBalances';
 import { usePrice } from '../hooks/usePrice';
-import { useSanctionedStore } from '../main';
+import { useSanctionedStore } from '../hooks/useSanctionedStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -10,14 +10,10 @@ import BigNumber from 'bignumber.js';
 
 const ExposurePage: React.FC = () => {
   const addresses = useSanctionedStore((s) => s.addresses);
-  const { data: price, isLoading: priceLoading, error: priceError } = usePrice();
+  const { data: price, isPending: pricePending, error: priceError } = usePrice();
+  const balances = useBalances(addresses);
 
-  const balances = addresses.map((address) => {
-    const { data, isLoading, error } = useBalance(address);
-    return { address, data, isLoading, error };
-  });
-
-  if (priceLoading) {
+  if (pricePending) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -37,18 +33,14 @@ const ExposurePage: React.FC = () => {
     );
   }
 
-  const rows = balances.map(({ address, data, isLoading, error }) => {
-    const eth = data ? new BigNumber(data).toFormat(6) : '—';
-    const usd = data ? new BigNumber(data).multipliedBy(price!).toFormat(2) : '—';
+  const rows = addresses.map((address, index) => {
+    const { data, isLoading, error } = balances[index];
+    const eth = data === undefined ? undefined : new BigNumber(data);
+    const usd = eth?.multipliedBy(price);
     return { address, eth, usd, isLoading, error };
   });
 
-  const totalUsd = rows
-    .reduce((sum, row) => {
-      if (row.usd !== '—') return sum.plus(new BigNumber(row.usd.replace(/,/g, '')));
-      return sum;
-    }, new BigNumber(0))
-    .toFormat(2);
+  const totalUsd = rows.reduce((sum, row) => (row.usd ? sum.plus(row.usd) : sum), new BigNumber(0));
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -71,9 +63,9 @@ const ExposurePage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-5xl font-bold text-green-600 mb-4">${totalUsd}</div>
+              <div className="text-5xl font-bold text-green-600 mb-4">${totalUsd.toFormat(2)}</div>
               <div className="flex justify-center items-center gap-2 flex-wrap">
-                <Badge variant="secondary">ETH Price: ${price?.toLocaleString()} USD</Badge>
+                <Badge variant="secondary">ETH Price: ${price.toLocaleString()} USD</Badge>
                 <Badge variant="outline">{addresses.length} Addresses</Badge>
               </div>
             </div>
@@ -112,13 +104,21 @@ const ExposurePage: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">ETH Balance</span>
                     <span className="font-semibold text-right">
-                      {isLoading ? <LoadingSpinner size="sm" /> : <span>{eth} ETH</span>}
+                      {isLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <span>{eth ? `${eth.toFormat(6)} ETH` : '—'}</span>
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">USD Value</span>
                     <span className="font-semibold text-green-600 text-right">
-                      {isLoading ? <LoadingSpinner size="sm" /> : <span>${usd}</span>}
+                      {isLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <span>{usd ? `$${usd.toFormat(2)}` : '—'}</span>
+                      )}
                     </span>
                   </div>
                   {error && (
