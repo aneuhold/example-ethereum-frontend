@@ -20,4 +20,11 @@ export default tseslint.config([
       globals: globals.browser,
     },
   },
+  {
+    // Test utilities are never hot-reloaded
+    files: ['src/test/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ]);

@@ -66,9 +66,10 @@ src/
 ├── config/             # Configuration and environment
 ├── hooks/              # Custom React hooks
 ├── pages/              # Page components
+├── services/           # API clients and other singleton services
 ├── test/               # Testing utilities
 ├── types/              # TypeScript type definitions
-└── lib/                # Utility functions
+└── utils/              # Utility functions
 ```
 
 ## Testing
