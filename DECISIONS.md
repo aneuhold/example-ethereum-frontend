@@ -7,7 +7,7 @@
 ### Feature 1: A. Dynamic Address Management
 
 - **Why I chose this**: It is the core interaction the app is missing, and it makes large address lists possible for the other two features.
-- **Time spent**:
+- **Time spent**: 50 minutes
 - **Challenges faced**:
 - **Key decisions**:
   - Upgraded to Tailwind CSS 4 and set up the shadcn CLI (`components.json`), so UI components come from the current registry instead of hand-edited v3 copies. `src/index.css` keeps the existing slate palette and system font.
@@ -83,14 +83,14 @@ Tests are written as part of each feature rather than in a separate block at the
 
 ## Time Breakdown
 
-| Block                         | Planned         | Actual |
-| ----------------------------- | --------------- | ------ |
-| Fixes to existing code        | 25 minutes      |        |
-| A. Dynamic Address Management | 45 minutes      |        |
-| B. Advanced Data Table        | 60 minutes      |        |
-| D. Performance & Caching      | 35 minutes      |        |
-| Documentation                 | 15 minutes      |        |
-| **Total**                     | **180 minutes** |        |
+| Block                         | Planned         | Actual                  |
+| ----------------------------- | --------------- | ----------------------- |
+| Fixes to existing code        | 25 minutes      | 31 minutes              |
+| A. Dynamic Address Management | 45 minutes      | 50 minutes              |
+| B. Advanced Data Table        | 60 minutes      |                         |
+| D. Performance & Caching      | 35 minutes      |                         |
+| Documentation                 | 15 minutes      |                         |
+| **Total**                     | **180 minutes** | **81 minutes** (so far) |
 
 Testing time is included in each block.
 
