@@ -2,26 +2,18 @@ import type { FC } from 'react';
 import { useBalances } from '../hooks/useBalances';
 import { usePrice } from '../hooks/usePrice';
 import { useSanctionedStore } from '../hooks/useSanctionedStore';
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AddressForm } from '@/components/AddressForm';
+import { AddressTable } from '@/components/AddressTable';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import type { Address } from '@/types/domain';
 import BigNumber from 'bignumber.js';
-import { CircleX, Trash } from 'lucide-react';
-import { toast } from 'sonner';
+import { CircleX } from 'lucide-react';
 
 const ExposurePage: FC = () => {
   const addresses = useSanctionedStore((s) => s.addresses);
-  const removeAddress = useSanctionedStore((s) => s.removeAddress);
   const { data: price, isPending: pricePending, error: priceError } = usePrice();
   const balances = useBalances(addresses);
 
@@ -46,14 +38,16 @@ const ExposurePage: FC = () => {
     );
   }
 
-  const rows = addresses.map((address, index) => {
+  const rows: Address[] = addresses.map((address, index) => {
     const { data, isLoading, error } = balances[index];
-    const eth = data === undefined ? undefined : new BigNumber(data);
-    const usd = eth?.multipliedBy(price);
-    return { address, eth, usd, isLoading, error };
+    const balance = data === undefined ? undefined : new BigNumber(data);
+    return { address, balance, balanceUsd: balance?.multipliedBy(price), isLoading, error };
   });
 
-  const totalUsd = rows.reduce((sum, row) => (row.usd ? sum.plus(row.usd) : sum), new BigNumber(0));
+  const totalUsd = rows.reduce(
+    (sum, row) => (row.balanceUsd ? sum.plus(row.balanceUsd) : sum),
+    new BigNumber(0)
+  );
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -87,82 +81,12 @@ const ExposurePage: FC = () => {
 
         <AddressForm />
 
-        {/* Addresses Grid */}
         {addresses.length === 0 ? (
           <p className="text-center text-muted-foreground">
             No addresses are being monitored. Add one with the form above.
           </p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {rows.map(({ address, eth, usd, isLoading, error }) => (
-              <Card key={address} className="gap-3 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-sm font-mono font-semibold break-all leading-tight">
-                    {address}
-                  </CardTitle>
-                  <CardAction className="flex items-center gap-1">
-                    {/* Status indicator as a small dot */}
-                    {isLoading ? (
-                      <div
-                        className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"
-                        title="Loading"
-                      />
-                    ) : error ? (
-                      <div className="w-3 h-3 rounded-full bg-red-500" title="Error loading data" />
-                    ) : (
-                      <div
-                        className="w-3 h-3 rounded-full bg-green-500"
-                        title="Data loaded successfully"
-                      />
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Remove ${address}`}
-                      onClick={() => {
-                        removeAddress(address);
-                        toast.success('Address removed');
-                      }}
-                    >
-                      <Trash />
-                    </Button>
-                  </CardAction>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">ETH Balance</span>
-                      <span className="text-base font-semibold text-right">
-                        {isLoading ? (
-                          <LoadingSpinner size="sm" />
-                        ) : (
-                          <span>{eth ? `${eth.toFormat(6)} ETH` : '—'}</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">USD Value</span>
-                      <span className="text-base font-semibold text-green-600 text-right">
-                        {isLoading ? (
-                          <LoadingSpinner size="sm" />
-                        ) : (
-                          <span>{usd ? `$${usd.toFormat(2)}` : '—'}</span>
-                        )}
-                      </span>
-                    </div>
-                    {error && (
-                      <div className="mt-2">
-                        <Badge variant="destructive" className="text-xs">
-                          Failed to load
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <AddressTable rows={rows} />
         )}
       </div>
     </div>

@@ -32,6 +32,9 @@ Create a `.env` file in the project root:
 ```env
 # Etherscan API Key (optional - get from https://etherscan.io/apis)
 VITE_ETHERSCAN_API_KEY=your_api_key_here
+
+# Return random balances and prices instead of calling Etherscan (optional, defaults to false)
+VITE_USE_MOCK_API=true
 ```
 
 ## Current Architecture
@@ -111,7 +114,8 @@ The base application includes:
 6. **Loading States**: Loading spinners and visual feedback
 7. **Responsive Design**: Works on mobile, tablet, and desktop
 8. **Type Safety**: Full TypeScript implementation with strict types
-9. **Address Management**: Add addresses one at a time through a form and remove them from each card. The list is saved to `localStorage`, and every add and remove shows a toast.
+9. **Address Management**: Add addresses one at a time through a form and remove them from each table row. The list is saved to `localStorage`, and every add and remove shows a toast.
+10. **Address Table**: Sort by address, ETH balance, or USD value; search addresses; filter by an ETH balance range; page through 20, 50, or 100 rows at a time; hide columns; and export every address as CSV or JSON.
 
 ## Your Mission
 
@@ -162,7 +166,7 @@ Strict configuration with path mapping (`@/*` imports) and comprehensive type ch
 ### Common Issues
 
 - **Node Version**: Ensure Node.js ≥ 20.19.0
-- **API Rate Limits**: Add Etherscan API key to `.env`
+- **API Rate Limits**: Add Etherscan API key to `.env`, or set `VITE_USE_MOCK_API=true` to use random data instead of the API
 - **Build Errors**: Run `npm run type-check` to identify TypeScript issues
 
 ---

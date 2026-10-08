@@ -4,4 +4,5 @@ export interface AppConfig {
   refreshInterval: number;
   retryAttempts: number;
   retryDelay: number;
+  useMockApi: boolean;
 }
