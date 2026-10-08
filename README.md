@@ -1,175 +1,89 @@
-# Frontend Take-Home Assignment: Sanctioned Address Monitor
+# Sanctioned Address Monitor
 
-A production-ready React & TypeScript foundation for monitoring Ethereum address balances. Your task is to extend this application with advanced features as outlined in `TAKE_HOME.md`.
+A React and TypeScript app that monitors ETH balances and total USD exposure across a list of sanctioned Ethereum addresses, using the Etherscan API.
 
-## Assignment Overview
+Implementation decisions, trade-offs, and time spent are in [DECISIONS.md](DECISIONS.md). The original assignment is in [TAKE_HOME.md](TAKE_HOME.md).
 
-This project provides a complete, working application that includes professional-grade architecture, error handling, and user interface. You'll build upon this foundation to demonstrate senior-level frontend engineering skills.
+## Features
 
-**See `TAKE_HOME.md` for your specific assignment tasks.**
+- **Exposure monitoring**: ETH balance and USD value for each address, plus total USD exposure across all addresses, using the live ETH/USD price from Etherscan.
+- **Address management**: add addresses through a form and remove them from each table row. Addresses are validated, normalized to lowercase, and checked for duplicates. The list is saved to `localStorage`, and every add and remove shows a toast.
+- **Address table**: sort by address, ETH balance, or USD value; search addresses; filter by an ETH balance range; page through 20, 50, or 100 rows at a time; hide columns; and export every address as CSV or JSON.
+- **Request batching**: balance requests made within 50 ms of each other are combined into Etherscan `balancemulti` requests of up to 20 addresses.
+- **Caching and background refresh**: each balance refreshes in the background every 5 minutes, or every 30 minutes for a zero balance, while the table keeps showing the cached value. Refreshes pause while the tab is hidden.
+- **Offline support**: balances and the price are saved to `localStorage`, so they show right away on reload and while offline, with an offline badge.
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js ≥ 20.19.0
-- npm or yarn
+- Node.js 20.19.0 or later
+- npm
 
 ### Installation
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-### Environment Setup (Optional)
+### Environment Variables
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env`. All variables are optional; `src/config/env.ts` reads them and applies the defaults.
 
-```env
-# Etherscan API Key (optional - get from https://etherscan.io/apis)
-VITE_ETHERSCAN_API_KEY=your_api_key_here
+| Variable                 | Default                           | Description                                                                                     |
+| ------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `VITE_ETHERSCAN_API_KEY` | none                              | Etherscan API key. Without one, requests are rate-limited. Get one at https://etherscan.io/apis |
+| `VITE_API_BASE_URL`      | `https://api.etherscan.io/v2/api` | Etherscan API base URL                                                                          |
+| `VITE_REFRESH_INTERVAL`  | `300000`                          | Balance and price refresh interval in milliseconds                                              |
+| `VITE_RETRY_ATTEMPTS`    | `3`                               | Retry attempts for failed requests                                                              |
+| `VITE_RETRY_DELAY`       | `1000`                            | Base retry delay in milliseconds, doubled on each attempt                                       |
+| `VITE_USE_MOCK_API`      | `false`                           | `true` returns random balances and prices instead of calling Etherscan                          |
 
-# Return random balances and prices instead of calling Etherscan (optional, defaults to false)
-VITE_USE_MOCK_API=true
-```
-
-## Current Architecture
-
-### Tech Stack
+## Tech Stack
 
 - **Framework**: React 19 with TypeScript
-- **Styling**: Tailwind CSS 4 + shadcn/ui components, added with the shadcn CLI (`npx shadcn@latest add <component>`)
-- **State Management**: Zustand for global state, TanStack Query for server state
-- **API Client**: Axios with retry logic and error handling
-- **Testing**: Vitest + React Testing Library
-- **Build Tool**: Vite 7
-- **Code Quality**: ESLint + Prettier + Husky
+- **Styling**: Tailwind CSS 4 and shadcn/ui components, added with the shadcn CLI (`npx shadcn@latest add <component>`)
+- **State**: Zustand for the address list, TanStack Query for server state, persisted with `@tanstack/react-query-persist-client`
+- **Table**: TanStack Table
+- **API client**: Axios
+- **Testing**: Vitest and React Testing Library
+- **Build tool**: Vite 7
+- **Code quality**: ESLint and Prettier
 
-### What's Already Implemented
-
-- **Clean Architecture**: Domain-driven structure with TypeScript
-- **API Integration**: ETH balance and price fetching with retry logic
-- **Professional UI**: shadcn/ui components with responsive design
-- **Performance**: Optimized queries, caching, and error boundaries
-- **Testing Setup**: Complete test infrastructure ready for use
-- **Developer Experience**: Linting, formatting, type checking
-- **Accessibility**: ARIA labels, semantic HTML, keyboard navigation
-
-### Project Structure
+## Project Structure
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── ui/             # shadcn/ui components
+├── components/          # App components (address form, address table)
+│   ├── ui/              # shadcn/ui components
 │   └── ErrorBoundary.tsx
-├── config/             # Configuration and environment
-├── hooks/              # Custom React hooks
-├── pages/              # Page components
-├── services/           # API clients and other singleton services
-├── test/               # Testing utilities
-└── types/              # TypeScript type definitions
+├── config/              # Environment configuration
+├── hooks/               # React hooks and the Zustand store
+├── pages/               # Page components
+├── services/            # Etherscan client, address validation, export
+├── test/                # Testing utilities
+└── types/               # TypeScript type definitions
 ```
 
-## Testing
+## Scripts
 
 ```bash
-# Run all tests
-npm run test
-
-# Run tests with UI
-npm run test:ui
-
-# Run tests with coverage
-npm run test:coverage
+npm run dev           # Start the development server
+npm run build         # Type-check and build for production
+npm run preview       # Preview the production build
+npm run test          # Run tests in watch mode
+npm run test:run      # Run tests once
+npm run test:ui       # Run tests with the Vitest UI
+npm run test:coverage # Run tests with coverage
+npm run lint          # Lint
+npm run lint:fix      # Fix lint issues
+npm run type-check    # Check TypeScript types
+npm run format        # Format with Prettier
+npm run format:check  # Check formatting
 ```
-
-## Development
-
-### Available Scripts
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Lint code
-npm run lint:fix     # Fix linting issues
-npm run type-check   # Check TypeScript types
-npm run format       # Format code with Prettier
-npm run format:check # Check code formatting
-```
-
-## Current Features
-
-The base application includes:
-
-1. **Address Balance Monitoring**: Real-time ETH balance fetching for sanctioned addresses
-2. **Price Integration**: Live ETH/USD price data from Etherscan
-3. **Exposure Calculation**: Total USD exposure across all addresses
-4. **Professional UI**: Card-based layout with status indicators
-5. **Error Handling**: Comprehensive error states and retry logic
-6. **Loading States**: Loading spinners and visual feedback
-7. **Responsive Design**: Works on mobile, tablet, and desktop
-8. **Type Safety**: Full TypeScript implementation with strict types
-9. **Address Management**: Add addresses one at a time through a form and remove them from each table row. The list is saved to `localStorage`, and every add and remove shows a toast.
-10. **Address Table**: Sort by address, ETH balance, or USD value; search addresses; filter by an ETH balance range; page through 20, 50, or 100 rows at a time; hide columns; and export every address as CSV or JSON.
-11. **Batching, Caching, and Offline Support**: Balances are fetched up to 20 addresses per request. Each balance refreshes in the background every 5 minutes, or every 30 minutes for a zero balance, while the table keeps showing the cached value. Balances and the price are saved to `localStorage`, so they show right away on reload and while offline, with an offline badge.
-
-## Your Mission
-
-**See `TAKE_HOME.md` for detailed assignment instructions.**
-
-You'll choose 2-3 advanced features to implement, such as:
-
-- Dynamic address management with persistence
-- Advanced data table with pagination and sorting
-- Real-time dashboard enhancements
-- Performance optimizations and caching
-- Comprehensive theme system
-- Testing excellence demonstration
-
-## Submission
-
-1. **Implement your chosen features** following the existing code quality standards
-2. **Document your decisions** in `DECISIONS.md`
-3. **Update this README** with your new features
-4. **Include tests** for any new functionality
-
-## Success Tips
-
-- **Build upon the existing foundation** - don't reinvent what's working
-- **Focus on code quality** - match the professional standards already established
-- **Consider performance** - your changes should enhance, not degrade performance
-- **Think about UX** - small details make a big difference
-- **Document decisions** - explain your technical choices
-
-## Configuration
-
-### Environment Variables
-
-All configuration is centralized in `src/config/env.ts` with validation and defaults.
-
-### TypeScript
-
-Strict configuration with path mapping (`@/*` imports) and comprehensive type checking.
-
-### Code Quality
-
-- Pre-commit hooks automatically lint and format code
-- Comprehensive ESLint rules for React and TypeScript
-- Prettier for consistent formatting
 
 ## Troubleshooting
 
-### Common Issues
-
-- **Node Version**: Ensure Node.js ≥ 20.19.0
-- **API Rate Limits**: Add Etherscan API key to `.env`, or set `VITE_USE_MOCK_API=true` to use random data instead of the API
-- **Build Errors**: Run `npm run type-check` to identify TypeScript issues
-
----
-
-Ready to get started? Check `TAKE_HOME.md` for your assignment details.
+- **API rate limits**: add an Etherscan API key to `.env`, or set `VITE_USE_MOCK_API=true` to use random data.
+- **Build errors**: run `npm run type-check` to find TypeScript issues.
