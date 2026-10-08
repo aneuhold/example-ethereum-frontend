@@ -12,7 +12,8 @@ import etherAddressService from '@/services/EtherAddress.service';
 
 /**
  * Client for the Etherscan V2 API. Every request error is thrown as an `ApiError`, except
- * cancellations, which are re-thrown unchanged.
+ * cancellations, which are re-thrown unchanged. When `appConfig.useMockApi` is set, it returns
+ * random data instead of sending requests.
  */
 class EtherscanService {
   private readonly requestTimeoutMs = 10000;
@@ -26,6 +27,9 @@ class EtherscanService {
   async getBalance(address: string, signal?: AbortSignal): Promise<string> {
     if (!etherAddressService.isValidAddress(address)) {
       throw new ApiError('Invalid Ethereum address format', 400, 'INVALID_ADDRESS');
+    }
+    if (appConfig.useMockApi) {
+      return this.mockRequest(new BigNumber(Math.random() * 100).toFixed(6));
     }
 
     const weiBalance = await this.request<EtherscanBalanceResult>(
@@ -46,6 +50,12 @@ class EtherscanService {
    * @returns ETH price in USD
    */
   async getEthPrice(signal?: AbortSignal): Promise<number> {
+    if (appConfig.useMockApi) {
+      return this.mockRequest(
+        new BigNumber(2000 + Math.random() * 2000).decimalPlaces(2).toNumber()
+      );
+    }
+
     const result = await this.request<EtherscanPriceResult>(
       { chainid: '1', module: 'stats', action: 'ethprice' },
       signal
@@ -76,6 +86,16 @@ class EtherscanService {
       return false;
     }
     return failureCount < appConfig.retryAttempts;
+  }
+
+  /**
+   * Resolves with a value after a random delay of up to one second, so loading states show as they
+   * would for a real request.
+   * @param value - Value to resolve with
+   */
+  private async mockRequest<TValue>(value: TValue): Promise<TValue> {
+    await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+    return value;
   }
 
   /**

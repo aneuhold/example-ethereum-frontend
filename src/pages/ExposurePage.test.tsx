@@ -96,7 +96,7 @@ describe('ExposurePage', () => {
     expect(screen.getByLabelText('Ethereum address')).toHaveValue('');
   });
 
-  it('shows an error toast for an invalid address, adds no card, and keeps the input', async () => {
+  it('shows an error toast for an invalid address, adds no row, and keeps the input', async () => {
     render(<ExposurePage />);
 
     await submitAddress('0x123');
@@ -115,13 +115,29 @@ describe('ExposurePage', () => {
     expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(2);
   });
 
-  it('removes a card and shows a toast when its remove button is clicked', async () => {
+  it('removes a row and shows a toast when its remove button is clicked', async () => {
     render(<ExposurePage />);
 
     fireEvent.click(await screen.findByRole('button', { name: `Remove ${secondAddress}` }));
 
     expect(screen.queryByText(secondAddress)).not.toBeInTheDocument();
     expect(await screen.findByText('Address removed')).toBeInTheDocument();
+  });
+
+  it('shows page 1 after removing the only row on page 2', async () => {
+    const addresses = Array.from(
+      { length: 21 },
+      (_, index) => `0x${(index + 1).toString(16).padStart(40, '0')}`
+    );
+    useSanctionedStore.setState({ addresses });
+    render(<ExposurePage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Next page' }));
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: `Remove ${addresses[20]}` }));
+
+    expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(20);
   });
 
   it('shows the empty state when no addresses are monitored', async () => {

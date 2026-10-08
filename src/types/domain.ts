@@ -1,10 +1,12 @@
+import type BigNumber from 'bignumber.js';
+import type { ApiError } from '@/types/error';
+
 export interface Address {
-  id: string;
   address: string;
-  balance?: string; // ETH balance as string to avoid precision issues
-  balanceUsd?: string; // USD value as string
-  isLoading?: boolean;
-  error?: string | null;
+  balance: BigNumber | undefined; // ETH
+  balanceUsd: BigNumber | undefined; // USD
+  isLoading: boolean;
+  error: ApiError | null;
 }
 
 export interface EthPrice {

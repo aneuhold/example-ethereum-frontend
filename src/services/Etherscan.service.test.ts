@@ -6,6 +6,7 @@ import etherscanService from './Etherscan.service';
 
 describe('EtherscanService', () => {
   const originalApiKey = appConfig.etherscanApiKey;
+  const originalUseMockApi = appConfig.useMockApi;
 
   const address = '0x0000000000000000000000000000000000000001';
 
@@ -22,10 +23,27 @@ describe('EtherscanService', () => {
 
   beforeEach(() => {
     appConfig.etherscanApiKey = undefined;
+    appConfig.useMockApi = false;
   });
 
   afterEach(() => {
     appConfig.etherscanApiKey = originalApiKey;
+    appConfig.useMockApi = originalUseMockApi;
+    vi.useRealTimers();
+  });
+
+  it('returns random data without sending a request when the mock API is on', async () => {
+    appConfig.useMockApi = true;
+    vi.useFakeTimers();
+    const getSpy = vi.spyOn(axios, 'get');
+
+    const balance = etherscanService.getBalance(address);
+    const price = etherscanService.getEthPrice();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    await expect(balance).resolves.toMatch(/^\d+\.\d{6}$/);
+    await expect(price).resolves.toBeGreaterThan(0);
+    expect(getSpy).not.toHaveBeenCalled();
   });
 
   describe('getBalance', () => {
