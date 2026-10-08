@@ -116,6 +116,7 @@ The base application includes:
 8. **Type Safety**: Full TypeScript implementation with strict types
 9. **Address Management**: Add addresses one at a time through a form and remove them from each table row. The list is saved to `localStorage`, and every add and remove shows a toast.
 10. **Address Table**: Sort by address, ETH balance, or USD value; search addresses; filter by an ETH balance range; page through 20, 50, or 100 rows at a time; hide columns; and export every address as CSV or JSON.
+11. **Batching, Caching, and Offline Support**: Balances are fetched up to 20 addresses per request. Each balance refreshes in the background every 5 minutes, or every 30 minutes for a zero balance, while the table keeps showing the cached value. Balances and the price are saved to `localStorage`, so they show right away on reload and while offline, with an offline badge.
 
 ## Your Mission
 

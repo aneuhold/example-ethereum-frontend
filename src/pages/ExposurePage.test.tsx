@@ -2,8 +2,9 @@ import { useSanctionedStore } from '@/hooks/useSanctionedStore';
 import etherscanService from '@/services/Etherscan.service';
 import { fireEvent, render, screen } from '@/test/test-utils';
 import { ApiError } from '@/types/error';
+import { onlineManager } from '@tanstack/react-query';
 import { act } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ExposurePage from './ExposurePage';
 
 describe('ExposurePage', () => {
@@ -27,6 +28,10 @@ describe('ExposurePage', () => {
       if (address in balances) return balances[address];
       throw new ApiError('Network error: Service unavailable', 503, 'NETWORK_ERROR');
     });
+  });
+
+  afterEach(() => {
+    onlineManager.setOnline(true);
   });
 
   /**
@@ -55,6 +60,27 @@ describe('ExposurePage', () => {
     render(<ExposurePage />);
 
     expect(await screen.findByText('Error Loading Price')).toBeInTheDocument();
+  });
+
+  it('shows an offline message instead of the loading state when offline with nothing cached', () => {
+    onlineManager.setOnline(false);
+
+    render(<ExposurePage />);
+
+    expect(screen.getByText('You Are Offline')).toBeInTheDocument();
+    expect(screen.queryByText('Loading ETH price...')).not.toBeInTheDocument();
+  });
+
+  it('shows an offline badge and keeps the cached balances when the connection drops', async () => {
+    render(<ExposurePage />);
+    await screen.findByText('$2,500.01');
+
+    act(() => onlineManager.setOnline(false));
+
+    expect(screen.getByText('Offline: showing cached data')).toBeInTheDocument();
+    expect(screen.getByText('$1,000.01')).toBeInTheDocument();
+    expect(screen.getByText('$1,500.01')).toBeInTheDocument();
+    expect(screen.getByText('$2,500.01')).toBeInTheDocument();
   });
 
   it('shows a total that is the exact sum of the rows', async () => {

@@ -5,8 +5,8 @@ interface EtherscanBaseParams {
 
 export interface EtherscanBalanceParams extends EtherscanBaseParams {
   module: 'account';
-  action: 'balance';
-  address: string;
+  action: 'balancemulti';
+  address: string; // Comma-separated addresses, up to 20
   tag: 'latest';
 }
 
@@ -25,7 +25,10 @@ export type EtherscanResponse<TResult> =
   | { status: '1'; message: string; result: TResult }
   | { status: '0'; message: string; result: string };
 
-export type EtherscanBalanceResult = string; // Wei amount as string
+export type EtherscanBalanceResult = {
+  account: string;
+  balance: string; // Wei amount as string
+}[];
 
 export interface EtherscanPriceResult {
   ethbtc: string;
