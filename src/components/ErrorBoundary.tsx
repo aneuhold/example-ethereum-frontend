@@ -5,12 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-}
-
 interface State {
   hasError: boolean;
   error: Error | null;
@@ -21,7 +15,14 @@ interface State {
  * Error Boundary component that catches JavaScript errors anywhere in the child component tree
  * and displays a fallback UI instead of crashing the entire application.
  */
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<
+  {
+    children: ReactNode;
+    fallback?: ReactNode;
+    onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  },
+  State
+> {
   public state: State = {
     hasError: false,
     error: null,

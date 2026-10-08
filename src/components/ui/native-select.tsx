@@ -2,11 +2,11 @@ import * as React from 'react';
 import { cn } from 'cn';
 import { ChevronDownIcon } from 'lucide-react';
 
-type NativeSelectProps = Omit<React.ComponentProps<'select'>, 'size'> & {
-  size?: 'sm' | 'default';
-};
-
-function NativeSelect({ className, size = 'default', ...props }: NativeSelectProps) {
+function NativeSelect({
+  className,
+  size = 'default',
+  ...props
+}: Omit<React.ComponentProps<'select'>, 'size'> & { size?: 'sm' | 'default' }) {
   return (
     <div
       className={cn(
