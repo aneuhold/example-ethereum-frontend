@@ -8,7 +8,7 @@
 
 - **Why I chose this**: It is the core interaction the app is missing, and it makes large address lists possible for the other two features.
 - **Time spent**: 50 minutes
-- **Challenges faced**:
+- **Challenges faced**: Needing to update to Tailwind 4, but it turned out nice IMO.
 - **Key decisions**:
   - Upgraded to Tailwind CSS 4 and set up the shadcn CLI (`components.json`), so UI components come from the current registry instead of hand-edited v3 copies. `src/index.css` keeps the existing slate palette and system font.
   - `EtherAddressService` owns address format validation, shared by `EtherscanService` and the store.
@@ -18,8 +18,8 @@
 ### Feature 2: B. Advanced Data Table with Pagination
 
 - **Why I chose this**: A card grid stops being usable past a couple dozen addresses. A sortable, filterable table is how compliance users scan exposure.
-- **Time spent**:
-- **Challenges faced**:
+- **Time spent**: 46 minutes
+- **Challenges faced**: Wanting to break apart the AddressTable component more.
 - **Key decisions**:
   - TanStack Table v9 (`@tanstack/react-table`) holds the sorting, filter, pagination, and column visibility state. It is headless, so the table renders with shadcn/ui `Table` markup, and it is the same TanStack family as React Query. `AddressTable` registers only the features and the sort and filter functions it uses.
   - The ETH and USD columns read their `BigNumber`s as numbers, so the built-in `basic` sort and `inNumberRange` filter work without custom functions. Cells still render from the `BigNumber`s. Each column names its sort and filter function, because `'auto'` infers one from the first row's value, which is `undefined` while balances load. Loading and failed rows sort last in both directions.
@@ -30,7 +30,7 @@
 ### Feature 3: D. Performance & Caching
 
 - **Why I chose this**: One request per address hits Etherscan's free-tier rate limit quickly at the address counts the data table targets. Request batching keeps the other features working.
-- **Time spent**:
+- **Time spent**: 35 minutes
 - **Challenges faced**:
   - React Query's `onlineManager` starts as online and only listens for `online` / `offline` events, so a page opened offline retried every query until it failed. `main.tsx` seeds it from `navigator.onLine` before render.
   - A page opened offline with nothing cached kept its price query pending (paused), so the loading spinner never went away. The page shows an offline message in that case instead.
@@ -45,13 +45,9 @@
 
 ### Architecture Decisions
 
-<!-- Explain your architectural choices -->
-
 - Adding services in the way they are now as singletons. Just a personal preference that I have seen to make things fairly organized. But it is just a personal decision. If working at a company that had a different opinion, would adopt what is there.
 
 ### Libraries/Tools Added
-
-<!-- List any new dependencies and justify them -->
 
 Added:
 
@@ -76,8 +72,6 @@ Upgraded:
 - `@tanstack/react-query` 5.82 to 5.104: required by `@tanstack/react-query-persist-client`.
 
 ### Performance Considerations
-
-<!-- How did you ensure your changes don't degrade performance? -->
 
 - The address table renders one page of at most 100 rows, so the DOM stays the same size at any address count.
 - The table's `features` and `columns` are defined at module scope, so they are the same objects on every render and TanStack Table does not rebuild its row models for them. The table keeps its own state, so typing in a filter re-renders only the table, not the page.
@@ -108,21 +102,23 @@ Tests are written as part of each feature rather than in a separate block at the
 <!-- Document any AI-assisted code per the requirements -->
 
 - **Tool used**: Claude Code
-- **What was generated**: A lot of the code. Some was still hand-written. But you will see in the transcripts.
+- **What was generated**: A lot of the code. Some was still hand-written. But you will see in the transcripts. That will be sent in an email in a zip file.
 - **How I reviewed/modified it**: Mostly line by line. Some things were paid more attention to than others. Testing as well manually and by running commands. I was the only one that made commits. That is my boundary to know what I have already reviewed.
 
 ## Time Breakdown
 
-| Block                         | Planned         | Actual                  |
-| ----------------------------- | --------------- | ----------------------- |
-| Fixes to existing code        | 25 minutes      | 31 minutes              |
-| A. Dynamic Address Management | 45 minutes      | 50 minutes              |
-| B. Advanced Data Table        | 60 minutes      |                         |
-| D. Performance & Caching      | 35 minutes      |                         |
-| Documentation                 | 15 minutes      |                         |
-| **Total**                     | **180 minutes** | **81 minutes** (so far) |
+| Block                         | Planned         | Actual          |
+| ----------------------------- | --------------- | --------------- |
+| Fixes to existing code        | 25 minutes      | 31 minutes      |
+| A. Dynamic Address Management | 45 minutes      | 50 minutes      |
+| B. Advanced Data Table        | 60 minutes      | 46 minutes      |
+| D. Performance & Caching      | 35 minutes      | 35 minutes      |
+| Documentation                 | 15 minutes      | 18 minutes      |
+| **Total**                     | **180 minutes** | **180 minutes** |
 
 Testing time is included in each block.
+
+Getting the starter app running (Etherscan V2 migration, TypeScript and Vitest config fixes, Prettier editor setup) took about 45 minutes and is not counted in the time breakdown.
 
 ## Reflection
 
