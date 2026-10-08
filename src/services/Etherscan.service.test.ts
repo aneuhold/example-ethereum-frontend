@@ -9,6 +9,13 @@ describe('EtherscanService', () => {
   const originalUseMockApi = appConfig.useMockApi;
 
   const address = '0x0000000000000000000000000000000000000001';
+  const otherAddress = '0x00000000219ab540356cbb839cbe05303d7705fa';
+
+  /**
+   * Builds `count` distinct valid addresses.
+   */
+  const createAddresses = (count: number) =>
+    Array.from({ length: count }, (_, index) => `0x${(index + 1).toString(16).padStart(40, '0')}`);
 
   /**
    * Builds an Axios response with the given body and HTTP status.
@@ -39,7 +46,7 @@ describe('EtherscanService', () => {
 
     const balance = etherscanService.getBalance(address);
     const price = etherscanService.getEthPrice();
-    await vi.advanceTimersByTimeAsync(1000);
+    await vi.runAllTimersAsync();
 
     await expect(balance).resolves.toMatch(/^\d+\.\d{6}$/);
     await expect(price).resolves.toBeGreaterThan(0);
@@ -49,7 +56,11 @@ describe('EtherscanService', () => {
   describe('getBalance', () => {
     it('converts Wei to ETH with 6 decimals', async () => {
       vi.spyOn(axios, 'get').mockResolvedValue(
-        createResponse({ status: '1', message: 'OK', result: '1234567890123456789' })
+        createResponse({
+          status: '1',
+          message: 'OK',
+          result: [{ account: address, balance: '1234567890123456789' }],
+        })
       );
 
       await expect(etherscanService.getBalance(address)).resolves.toBe('1.234568');
@@ -57,7 +68,7 @@ describe('EtherscanService', () => {
 
     it("returns '0.000000' for a zero balance", async () => {
       vi.spyOn(axios, 'get').mockResolvedValue(
-        createResponse({ status: '1', message: 'OK', result: '0' })
+        createResponse({ status: '1', message: 'OK', result: [{ account: address, balance: '0' }] })
       );
 
       await expect(etherscanService.getBalance(address)).resolves.toBe('0.000000');
@@ -74,9 +85,13 @@ describe('EtherscanService', () => {
     });
 
     it('includes the API key only when it is configured', async () => {
-      const getSpy = vi
-        .spyOn(axios, 'get')
-        .mockResolvedValue(createResponse({ status: '1', message: 'OK', result: '0' }));
+      const getSpy = vi.spyOn(axios, 'get').mockResolvedValue(
+        createResponse({
+          status: '1',
+          message: 'OK',
+          result: [{ account: address, balance: '0' }],
+        })
+      );
 
       await etherscanService.getBalance(address);
       appConfig.etherscanApiKey = 'test-key';
@@ -84,6 +99,111 @@ describe('EtherscanService', () => {
 
       expect(getSpy.mock.calls[0][1]?.params).not.toHaveProperty('apikey');
       expect(getSpy.mock.calls[1][1]?.params).toMatchObject({ address, apikey: 'test-key' });
+    });
+
+    it('sends concurrent calls in one request and matches results by account', async () => {
+      const getSpy = vi.spyOn(axios, 'get').mockResolvedValue(
+        createResponse({
+          status: '1',
+          message: 'OK',
+          result: [
+            {
+              account: otherAddress.toUpperCase().replace('0X', '0x'),
+              balance: '2000000000000000000',
+            },
+            { account: address, balance: '1000000000000000000' },
+          ],
+        })
+      );
+
+      const balances = Promise.all([
+        etherscanService.getBalance(address),
+        etherscanService.getBalance(otherAddress),
+        etherscanService.getBalance(address),
+      ]);
+
+      await expect(balances).resolves.toEqual(['1.000000', '2.000000', '1.000000']);
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy.mock.calls[0][1]?.params).toMatchObject({
+        action: 'balancemulti',
+        address: `${address},${otherAddress}`,
+      });
+    });
+
+    it('sends calls made a few milliseconds apart in one request', async () => {
+      vi.useFakeTimers();
+      const getSpy = vi.spyOn(axios, 'get').mockResolvedValue(
+        createResponse({
+          status: '1',
+          message: 'OK',
+          result: [
+            { account: address, balance: '0' },
+            { account: otherAddress, balance: '0' },
+          ],
+        })
+      );
+
+      const first = etherscanService.getBalance(address);
+      await vi.advanceTimersByTimeAsync(20);
+      const second = etherscanService.getBalance(otherAddress);
+      await vi.runAllTimersAsync();
+
+      await expect(Promise.all([first, second])).resolves.toEqual(['0.000000', '0.000000']);
+      expect(getSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('sends 21 addresses in two requests of 20 and 1', async () => {
+      const addresses = createAddresses(21);
+      const getSpy = vi.spyOn(axios, 'get').mockImplementation(async (_url, config) => {
+        const requested: string = config?.params.address;
+        return createResponse({
+          status: '1',
+          message: 'OK',
+          result: requested.split(',').map((account) => ({ account, balance: '0' })),
+        });
+      });
+
+      await Promise.all(addresses.map((each) => etherscanService.getBalance(each)));
+
+      expect(getSpy).toHaveBeenCalledTimes(2);
+      expect(getSpy.mock.calls[0][1]?.params.address).toBe(addresses.slice(0, 20).join(','));
+      expect(getSpy.mock.calls[1][1]?.params.address).toBe(addresses[20]);
+    });
+
+    it('throws INVALID_DATA for an address missing from the result', async () => {
+      vi.spyOn(axios, 'get').mockResolvedValue(
+        createResponse({ status: '1', message: 'OK', result: [{ account: address, balance: '0' }] })
+      );
+
+      const balances = Promise.allSettled([
+        etherscanService.getBalance(address),
+        etherscanService.getBalance(otherAddress),
+      ]);
+
+      const [present, missing] = await balances;
+      expect(present).toEqual({ status: 'fulfilled', value: '0.000000' });
+      expect(missing).toMatchObject({ status: 'rejected', reason: { code: 'INVALID_DATA' } });
+    });
+
+    it('rejects only the addresses in a failed request', async () => {
+      const addresses = createAddresses(21);
+      vi.spyOn(axios, 'get')
+        .mockRejectedValueOnce(new AxiosError('timeout', 'ECONNABORTED'))
+        .mockResolvedValueOnce(
+          createResponse({
+            status: '1',
+            message: 'OK',
+            result: [{ account: addresses[20], balance: '0' }],
+          })
+        );
+
+      const results = await Promise.allSettled(
+        addresses.map((each) => etherscanService.getBalance(each))
+      );
+
+      expect(results.slice(0, 20).every((result) => result.status === 'rejected')).toBe(true);
+      expect(results[0]).toMatchObject({ reason: { code: 'NETWORK_ERROR' } });
+      expect(results[20]).toEqual({ status: 'fulfilled', value: '0.000000' });
     });
   });
 

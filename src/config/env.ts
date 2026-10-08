@@ -10,7 +10,7 @@ function validateEnv(): AppConfig {
     refreshInterval: Number(import.meta.env.VITE_REFRESH_INTERVAL) || 300_000, // 5 minutes
     retryAttempts: Number(import.meta.env.VITE_RETRY_ATTEMPTS) || 3,
     retryDelay: Number(import.meta.env.VITE_RETRY_DELAY) || 1000,
-    useMockApi: import.meta.env.VITE_USE_MOCK_API || false,
+    useMockApi: import.meta.env.VITE_USE_MOCK_API === 'true',
   };
 
   // Warn about missing API key in development

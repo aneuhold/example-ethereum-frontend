@@ -11,37 +11,43 @@ import { ApiError } from '@/types/error';
 import etherAddressService from '@/services/EtherAddress.service';
 
 /**
+ * A `getBalance` call waiting for its address to be sent in a batch.
+ */
+interface PendingBalance {
+  address: string;
+  resolve: (balance: string) => void;
+  reject: (error: unknown) => void;
+}
+
+/**
  * Client for the Etherscan V2 API. Every request error is thrown as an `ApiError`, except
- * cancellations, which are re-thrown unchanged. When `appConfig.useMockApi` is set, it returns
- * random data instead of sending requests.
+ * cancellations, which are re-thrown unchanged. Only the price request can be cancelled, because
+ * one balance request serves many callers. When `appConfig.useMockApi` is set, it returns random
+ * data instead of sending requests.
  */
 class EtherscanService {
   private readonly requestTimeoutMs = 10000;
+  private readonly maxAddressesPerBalanceRequest = 20;
+  private readonly balanceBatchWindowMs = 50;
+  private pendingBalances: PendingBalance[] = [];
 
   /**
-   * Fetches the ETH balance of an address.
+   * Fetches the ETH balance of an address. The first call queued starts a 50 ms window, and every
+   * call made within it is sent together, up to 20 addresses per request.
    * @param address - Ethereum address to fetch the balance for
-   * @param signal - Signal that cancels the request
    * @returns Balance in ETH as a string with 6 decimals
    */
-  async getBalance(address: string, signal?: AbortSignal): Promise<string> {
+  async getBalance(address: string): Promise<string> {
     if (!etherAddressService.isValidAddress(address)) {
       throw new ApiError('Invalid Ethereum address format', 400, 'INVALID_ADDRESS');
     }
-    if (appConfig.useMockApi) {
-      return this.mockRequest(new BigNumber(Math.random() * 100).toFixed(6));
-    }
 
-    const weiBalance = await this.request<EtherscanBalanceResult>(
-      { chainid: '1', module: 'account', action: 'balance', address, tag: 'latest' },
-      signal
-    );
-
-    // Convert Wei to ETH with precision handling
-    if (!weiBalance || weiBalance === '0') {
-      return '0.000000';
-    }
-    return new BigNumber(weiBalance).dividedBy(new BigNumber(10).pow(18)).toFixed(6);
+    return new Promise((resolve, reject) => {
+      this.pendingBalances.push({ address: address.toLowerCase(), resolve, reject });
+      if (this.pendingBalances.length === 1) {
+        setTimeout(() => void this.sendPendingBalances(), this.balanceBatchWindowMs);
+      }
+    });
   }
 
   /**
@@ -86,6 +92,76 @@ class EtherscanService {
       return false;
     }
     return failureCount < appConfig.retryAttempts;
+  }
+
+  /**
+   * Fetches the balances of every queued address, one request per chunk of up to 20 addresses.
+   * Chunks are sent one after another to stay closer to the rate limit. A failed chunk rejects only
+   * its own callers, and callers that queued the same address share one entry in the request.
+   */
+  private async sendPendingBalances(): Promise<void> {
+    const pendingByAddress = new Map<string, PendingBalance[]>();
+    for (const pending of this.pendingBalances) {
+      pendingByAddress.set(pending.address, [
+        ...(pendingByAddress.get(pending.address) ?? []),
+        pending,
+      ]);
+    }
+    this.pendingBalances = [];
+
+    const addresses = [...pendingByAddress.keys()];
+    for (let start = 0; start < addresses.length; start += this.maxAddressesPerBalanceRequest) {
+      const chunk = addresses.slice(start, start + this.maxAddressesPerBalanceRequest);
+      try {
+        const weiBalances = await this.fetchWeiBalances(chunk);
+        for (const address of chunk) {
+          const weiBalance = weiBalances.get(address);
+          pendingByAddress.get(address)?.forEach(({ resolve, reject }) => {
+            if (weiBalance === undefined) {
+              reject(new ApiError('Invalid balance data received from API', 500, 'INVALID_DATA'));
+              return;
+            }
+            // Convert Wei to ETH with precision handling
+            if (!weiBalance || weiBalance === '0') {
+              resolve('0.000000');
+              return;
+            }
+            resolve(new BigNumber(weiBalance).dividedBy(new BigNumber(10).pow(18)).toFixed(6));
+          });
+        }
+      } catch (error) {
+        chunk.forEach((address) =>
+          pendingByAddress.get(address)?.forEach(({ reject }) => reject(error))
+        );
+      }
+    }
+  }
+
+  /**
+   * Fetches the Wei balances of up to 20 addresses in one request.
+   * @param addresses - Lowercase Ethereum addresses
+   * @returns Wei balance by lowercase address, for each account in the response
+   */
+  private async fetchWeiBalances(addresses: string[]): Promise<Map<string, string>> {
+    if (appConfig.useMockApi) {
+      return this.mockRequest(
+        new Map(
+          addresses.map((address) => [
+            address,
+            new BigNumber(Math.random() * 100).shiftedBy(18).toFixed(0),
+          ])
+        )
+      );
+    }
+
+    const result = await this.request<EtherscanBalanceResult>({
+      chainid: '1',
+      module: 'account',
+      action: 'balancemulti',
+      address: addresses.join(','),
+      tag: 'latest',
+    });
+    return new Map(result?.map(({ account, balance }) => [account.toLowerCase(), balance]));
   }
 
   /**

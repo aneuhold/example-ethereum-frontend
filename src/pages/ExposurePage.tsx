@@ -1,4 +1,5 @@
-import type { FC } from 'react';
+import { useSyncExternalStore, type FC } from 'react';
+import { onlineManager } from '@tanstack/react-query';
 import { useBalances } from '../hooks/useBalances';
 import { usePrice } from '../hooks/usePrice';
 import { useSanctionedStore } from '../hooks/useSanctionedStore';
@@ -10,12 +11,27 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { Address } from '@/types/domain';
 import BigNumber from 'bignumber.js';
-import { CircleX } from 'lucide-react';
+import { CircleX, WifiOff } from 'lucide-react';
 
 const ExposurePage: FC = () => {
   const addresses = useSanctionedStore((s) => s.addresses);
-  const { data: price, isPending: pricePending, error: priceError } = usePrice();
+  const { data: price, isPending: pricePending } = usePrice();
   const balances = useBalances(addresses);
+  const isOnline = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline());
+
+  if (pricePending && !isOnline) {
+    return (
+      <div className="p-6 max-w-md mx-auto mt-8">
+        <Alert>
+          <WifiOff />
+          <AlertTitle>You Are Offline</AlertTitle>
+          <AlertDescription>
+            No cached data is available yet. Balances and prices load once the connection returns.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (pricePending) {
     return (
@@ -26,7 +42,8 @@ const ExposurePage: FC = () => {
     );
   }
 
-  if (priceError) {
+  // A failed refetch keeps showing the cached price
+  if (price === undefined) {
     return (
       <div className="p-6 max-w-md mx-auto mt-8">
         <Alert variant="destructive">
@@ -74,6 +91,12 @@ const ExposurePage: FC = () => {
               <div className="flex justify-center items-center gap-2 flex-wrap">
                 <Badge variant="secondary">ETH Price: ${price.toLocaleString()} USD</Badge>
                 <Badge variant="outline">{addresses.length} Addresses</Badge>
+                {!isOnline && (
+                  <Badge variant="destructive">
+                    <WifiOff data-icon="inline-start" />
+                    Offline: showing cached data
+                  </Badge>
+                )}
               </div>
             </div>
           </CardContent>

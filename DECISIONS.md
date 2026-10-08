@@ -32,13 +32,22 @@
 - **Why I chose this**: One request per address hits Etherscan's free-tier rate limit quickly at the address counts the data table targets. Request batching keeps the other features working.
 - **Time spent**:
 - **Challenges faced**:
+  - React Query's `onlineManager` starts as online and only listens for `online` / `offline` events, so a page opened offline retried every query until it failed. `main.tsx` seeds it from `navigator.onLine` before render.
+  - A page opened offline with nothing cached kept its price query pending (paused), so the loading spinner never went away. The page shows an offline message in that case instead.
 - **Key decisions**:
+  - Batching stays inside `EtherscanService.getBalance`, so `useBalances` keeps one query per address. Each call queues its address. The first call queued starts a 50 ms timer, and when it fires, everything queued is sent, so balance queries started within 50 ms of each other share requests. A fixed window does not depend on every call arriving in the same turn of the event loop. The queue is sent with Etherscan's `balancemulti` action in chunks of 20 addresses (the API's limit), one chunk after another. A failed chunk rejects only its own addresses, and an address missing from the response rejects with `INVALID_DATA`.
+  - `getBalance` takes no `AbortSignal`. One request serves up to 20 queries, so one query's abort cannot cancel it. React Query only cancels a query whose `signal` was read, so a removed address's balance just goes into the cache unused.
+  - Each balance query uses one function of its cached balance for both `staleTime` and `refetchInterval`: `appConfig.refreshInterval` (5 minutes by default), or six times that for a zero balance, which carries no exposure and rarely changes. Queries that load together start their refetch timers within milliseconds of each other, so their background refetches fall in the same 50 ms window and batch together again. Refetches pause while the tab is hidden (`refetchIntervalInBackground` stays `false`), and rows keep their cached balance during a refetch because the page reads `isLoading`, which is true only for the first fetch.
+  - The query cache persists to `localStorage` through `PersistQueryClientProvider` and `createAsyncStoragePersister` (`createSyncStoragePersister` is deprecated). The default `gcTime` is 24 hours to match the persister's default `maxAge`, so persisted queries are not dropped before they expire.
+  - When offline, the Total Exposure card shows an "Offline: showing cached data" badge, and queries pause instead of failing. A failed price refetch keeps showing the cached price; the price error alert shows only when there is no price at all.
 
 ## Technical Approach
 
 ### Architecture Decisions
 
 <!-- Explain your architectural choices -->
+
+- Adding services in the way they are now as singletons. Just a personal preference that I have seen to make things fairly organized. But it is just a personal decision. If working at a company that had a different opinion, would adopt what is there.
 
 ### Libraries/Tools Added
 
@@ -52,6 +61,8 @@ Added:
 - `radix-ui`: primitives for the shadcn/ui Radix components.
 - `cn`: class merging used by CLI-generated components.
 - `@tailwindcss/vite`: Tailwind CSS 4 Vite plugin.
+- `@tanstack/react-query-persist-client`: `PersistQueryClientProvider`, which restores and saves the query cache.
+- `@tanstack/query-async-storage-persister`: stores the query cache in `localStorage`.
 
 Removed:
 
@@ -62,6 +73,7 @@ Upgraded:
 
 - `tailwindcss` 3 to 4: current shadcn/ui components target Tailwind CSS 4.
 - `lucide-react` 0.468 to 1.52: latest version, per the shadcn/ui Tailwind CSS 4 upgrade guide.
+- `@tanstack/react-query` 5.82 to 5.104: required by `@tanstack/react-query-persist-client`.
 
 ### Performance Considerations
 
@@ -69,12 +81,19 @@ Upgraded:
 
 - The address table renders one page of at most 100 rows, so the DOM stays the same size at any address count.
 - The table's `features` and `columns` are defined at module scope, so they are the same objects on every render and TanStack Table does not rebuild its row models for them. The table keeps its own state, so typing in a filter re-renders only the table, not the page.
+- Balances are fetched with Etherscan's `balancemulti`, so 100 addresses take 5 requests instead of 100.
+- Zero balances refetch every 30 minutes instead of every 5 (with the default refresh interval), and no balances refetch while the tab is hidden.
 
 ## Trade-offs Made
 
 - Pagination instead of virtual scrolling for the address table. A page caps the rendered rows at 100, which keeps the DOM small without a virtualization library.
 - No column resizing in the address table.
+- No performance monitoring.
+- No Service Worker, so the app shell itself does not load offline; only data already in the query cache does.
+- Balance chunks are sent one after another with no strict throttle to Etherscan's 3 calls/second limit. A burst over the limit comes back as `API_ERROR`, which the existing retry with backoff handles.
 - Didn't update eslint to the latest and make the linting more strict. It would have taken more time than could be reasonably done with the other features that needed to be built. But if this was a real project with a team, and was greenfield, that kind of standard would have paid dividends for the life of the project.
+- Didn't spend more time on the visual look and feel. Would have like to make it look better. Didn't want it to look like AI slop though so didn't let the AI go crazy and do something default.
+- Didn't spend time on the mobile view. This is normally a huge no-no for me, but was trying to satisfy the requirements.
 
 ## Testing Strategy
 
@@ -88,9 +107,9 @@ Tests are written as part of each feature rather than in a separate block at the
 
 <!-- Document any AI-assisted code per the requirements -->
 
-- **Tool used**:
-- **What was generated**:
-- **How I reviewed/modified it**:
+- **Tool used**: Claude Code
+- **What was generated**: A lot of the code. Some was still hand-written. But you will see in the transcripts.
+- **How I reviewed/modified it**: Mostly line by line. Some things were paid more attention to than others. Testing as well manually and by running commands. I was the only one that made commits. That is my boundary to know what I have already reviewed.
 
 ## Time Breakdown
 
